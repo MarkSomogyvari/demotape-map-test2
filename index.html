@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Interactive Map</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<style>
+body {
+  margin: 0;
+  display: flex;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+}
+#map {
+  width: 65%;
+  height: 100%;
+}
+#panel {
+  width: 35%;
+  padding: 15px;
+  overflow-y: auto;
+  border-left: 2px solid #ccc;
+}
+img {
+  max-width: 100%;
+}
+iframe {
+  width: 100%;
+  height: 250px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="map"></div>
+<div id="panel">
+  <h2>Click a marker</h2>
+  <p>Information will appear here.</p>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+const map = L.map('map').setView([20.9618,-39.7297], 8);
+
+// your raster tiles
+L.tileLayer('tiles/{z}/{x}/{y}.jpg', {
+  minZoom: 8,
+  maxZoom: 16,
+  noWrap: true
+}).addTo(map);
+
+// load points
+fetch('data/points3.geojson')
+  .then(res => res.json())
+  .then(data => {
+    L.geoJSON(data, {
+      onEachFeature: function(feature, layer) {
+        layer.on('click', function() {
+          const p = feature.properties;
+          document.getElementById('panel').innerHTML = `
+            <h2>${p.title}</h2>
+            <p>${p.text}</p>
+            ${p.image ? `<img src="${p.image}">` : ''}
+            ${p.video ? `<iframe src="${p.video}" frameborder="0" allowfullscreen></iframe>` : ''}
+          `;
+        });
+      }
+    }).addTo(map);
+  });
+</script>
+
+</body>
+</html>
