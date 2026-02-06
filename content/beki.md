@@ -2,4 +2,4 @@
 
 _This is a bridge on the Beki river_
 
-![Beki](../images/beki.jpg)
+![Beki](images/beki.jpg)
