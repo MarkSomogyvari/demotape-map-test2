@@ -5,6 +5,11 @@
 <title>Interactive Map</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- Markdown parser -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
 
 <style>
 body {
@@ -37,11 +42,11 @@ iframe {
 
 <div id="map"></div>
 <div id="panel">
-  <h2>Click a marker</h2>
-  <p>Information will appear here.</p>
+  <h2>Welcome</h2>
+  <p>Click a marker to load content.</p>
 </div>
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
 
 <script>
 const map = L.map('map').setView([20.9618,-39.7297], 8);
@@ -49,27 +54,46 @@ const map = L.map('map').setView([20.9618,-39.7297], 8);
 // your raster tiles
 L.tileLayer('tiles/{z}/{x}/{y}.jpg', {
   minZoom: 8,
-  maxZoom: 10,
+  maxZoom: 16,
   noWrap: true
 }).addTo(map);
+
+let activeMarker = null;
 
 // load points
 fetch('data/points3.geojson')
   .then(res => res.json())
   .then(data => {
-    L.geoJSON(data, {
+    const geoLayer = L.geoJSON(data, {
+      pointToLayer: function(feature, latlng) {
+        return L.marker(latlng);
+      },
       onEachFeature: function(feature, layer) {
+
         layer.on('click', function() {
-          const p = feature.properties;
-          document.getElementById('panel').innerHTML = `
-            <h2>${p.title}</h2>
-            <p>${p.text}</p>
-            ${p.image ? `<img src="${p.image}">` : ''}
-            ${p.video ? `<iframe src="${p.video}" frameborder="0" allowfullscreen></iframe>` : ''}
-          `;
+
+          // highlight marker
+          if (activeMarker) {
+            activeMarker.getElement().classList.remove('active');
+          }
+          activeMarker = layer;
+          layer.getElement().classList.add('active');
+
+          // load markdown
+          fetch(feature.properties.content_file)
+            .then(r => r.text())
+            .then(md => {
+              document.getElementById('panel').innerHTML = `
+                <h2>${feature.properties.title}</h2>
+                ${marked.parse(md)}
+              `;
+            });
+
         });
       }
     }).addTo(map);
+
+// map.fitBounds(geoLayer.getBounds());
   });
 </script>
 
