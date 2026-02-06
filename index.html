@@ -83,10 +83,17 @@ fetch('data/points3.geojson')
           fetch(feature.properties.content_file)
             .then(r => r.text())
             .then(md => {
-              document.getElementById('panel').innerHTML = `
-                <h2>${feature.properties.title}</h2>
-                ${marked.parse(md)}
-              `;
+			const repoName = window.location.pathname.split('/')[1];
+
+			const html = marked.parse(md);
+
+			// fix image paths
+			const fixedHtml = html.replace(/src="images\//g, `src="/${repoName}/images/`);
+
+			document.getElementById('panel').innerHTML = `
+			  <h2>${feature.properties.title}</h2>
+			  ${fixedHtml}
+			`;
             });
 
         });
